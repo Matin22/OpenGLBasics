@@ -10,9 +10,11 @@
     x; \
     ASSERT(GLLogCall(#x, __FILE__, __LINE__))
 
+
 static void GLClearError(){
     while(glGetError() != GL_NO_ERROR);
 }
+
 
 static bool GLLogCall(const char* function, const char* file, int line){
     while(GLenum error = glGetError()){
@@ -22,6 +24,8 @@ static bool GLLogCall(const char* function, const char* file, int line){
 
     return true;
 }
+
+
 
 void GLAPIENTRY debugCallback(unsigned int source, unsigned int type, unsigned int id, unsigned int severity,
                               int length, const char* message, const void* userParam) {
@@ -37,11 +41,15 @@ void GLAPIENTRY debugCallback(unsigned int source, unsigned int type, unsigned i
     }
 }
 
+
+
 void initializeSimpleDebugCallback() {
     glEnable(GL_DEBUG_OUTPUT);
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(debugCallback, NULL);
 }
+
+
 
 static std::string parseShader(const std::string& filePath){
     std::ifstream file(filePath);
@@ -51,6 +59,8 @@ static std::string parseShader(const std::string& filePath){
 
     return buffer.str();
 }
+
+
 
 static unsigned int compileShader(unsigned int type, const std::string& source){
     unsigned int id = glCreateShader(type);
@@ -76,6 +86,8 @@ static unsigned int compileShader(unsigned int type, const std::string& source){
     return id;
 }
 
+
+
 static unsigned int CreateShader(const std::string &vertexShader, const std::string &fragmentShader){
     unsigned int program = glCreateProgram();
     unsigned int vs = compileShader(GL_VERTEX_SHADER, vertexShader);
@@ -92,6 +104,8 @@ static unsigned int CreateShader(const std::string &vertexShader, const std::str
     return program;
 }
 
+
+
 int main(void)
 {
 
@@ -100,6 +114,10 @@ int main(void)
     /* Initialize the library */
     if (!glfwInit())
         return -1;
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     /* Create a windowed mode window and its OpenGL context */
     window = glfwCreateWindow(640, 480, "Window", NULL, NULL);
@@ -139,6 +157,10 @@ int main(void)
         2, 3, 0
         };
 
+    unsigned int vao;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
     unsigned int buffer;
     glGenBuffers(1, &buffer);
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
@@ -147,25 +169,38 @@ int main(void)
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
 
+
+    // index buffer object
     unsigned int ibo;
     glGenBuffers(1, &ibo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 
+    // shader init and setup
     std::string vertexSource = parseShader("res/shaders/vshader.vs");
     std::string fragmentSource = parseShader("res/shaders/fshader.fs");
 
-    unsigned int program = CreateShader(vertexSource, fragmentSource);
-    glUseProgram(program);
+    unsigned int shaderProgram = CreateShader(vertexSource, fragmentSource);
+    glUseProgram(shaderProgram);
 
-    int location = glGetUniformLocation(program, "u_Color");
+
+    // uniform setup
+    int location = glGetUniformLocation(shaderProgram, "u_Color");
     ASSERT(location != -1)
     
     glUniform4f(location, 0.0f, 0.0f, 1.0f, 1.0f);
 
+
+    // uniform logic
     float r = 0.0f;
     float increment = 0.025f;
+
+    glUseProgram(0);
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -173,7 +208,12 @@ int main(void)
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUniform4f(location, r, 0.0f, 0.5, 1.0f);
+        glUseProgram(shaderProgram);
+        glBindVertexArray(vao);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+
+        glUniform4f(location, r, 0.0f, 0.0, 0.0f);
+        
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, NULL);
 
         if (r > 1.0f)
@@ -190,7 +230,7 @@ int main(void)
         glfwPollEvents();
     }
 
-    glDeleteProgram(program);
+    glDeleteProgram(shaderProgram);
 
     glfwTerminate();
     return 0;
