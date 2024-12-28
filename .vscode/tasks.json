@@ -7,8 +7,11 @@
       "args": [
         "-g",
         "-std=c++17",
-        "${file}",
+        "${workspaceFolder}/src/main.cpp",
         "${workspaceFolder}/src/glad.c",
+        "${workspaceFolder}/src/renderer.cpp",
+        "${workspaceFolder}/src/vertexBuffer.cpp",
+        "${workspaceFolder}/src/indexBuffer.cpp",
         "-I",
         "${workspaceFolder}/include",
         "-L",
