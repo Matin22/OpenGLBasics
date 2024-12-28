@@ -4,51 +4,10 @@
 #include <fstream>
 #include <sstream>
 
-#define ASSERT(x) if (!(x)) __debugbreak();
-#define GLCall(x)   \
-    GLClearError(); \
-    x; \
-    ASSERT(GLLogCall(#x, __FILE__, __LINE__))
+#include "renderer.h"
 
-
-static void GLClearError(){
-    while(glGetError() != GL_NO_ERROR);
-}
-
-
-static bool GLLogCall(const char* function, const char* file, int line){
-    while(GLenum error = glGetError()){
-        std::cout << "[-] OPENGL ERROR: (" << error << ") " << function << " " << file << ":" << line << std::endl;
-        return false;
-    }
-
-    return true;
-}
-
-
-
-void GLAPIENTRY debugCallback(unsigned int source, unsigned int type, unsigned int id, unsigned int severity,
-                              int length, const char* message, const void* userParam) {
-    
-    // Print the debug message
-    std::cout << "OpenGL Debug Message:" << std::endl;
-    std::cout << "Source: " << source << ", Type: " << type << ", ID: " << id << ", Severity: " << severity << std::endl;
-    std::cout << "Message: " << message << std::endl;
-
-    if (type == GL_DEBUG_TYPE_ERROR) {
-        std::cout << "Stopping due to OpenGL error!" << std::endl;
-        __builtin_trap();
-    }
-}
-
-
-
-void initializeSimpleDebugCallback() {
-    glEnable(GL_DEBUG_OUTPUT);
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-    glDebugMessageCallback(debugCallback, NULL);
-}
-
+#include "vertexBuffer.h"
+#include "indexBuffer.h"
 
 
 static std::string parseShader(const std::string& filePath){
@@ -153,29 +112,20 @@ int main(void)
          };
 
     unsigned int indices[] = {
-        0, 1, 2,
-        2, 3, 0
+        0, 1, 2, // first triangle
+        2, 3, 0  // second triangle
         };
 
     unsigned int vao;
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
 
-    unsigned int buffer;
-    glGenBuffers(1, &buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
+    vertexBuffer vb(positions, sizeof(positions));
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
 
-
-    // index buffer object
-    unsigned int ibo;
-    glGenBuffers(1, &ibo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
+    indexBuffer ib(indices, sizeof(indices));
 
     // shader init and setup
     std::string vertexSource = parseShader("res/shaders/vshader.vs");
@@ -210,7 +160,7 @@ int main(void)
 
         glUseProgram(shaderProgram);
         glBindVertexArray(vao);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+        ib.Bind();
 
         glUniform4f(location, r, 0.0f, 0.0, 0.0f);
         
