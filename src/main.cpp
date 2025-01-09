@@ -8,6 +8,7 @@
 
 #include "vertexBuffer.h"
 #include "indexBuffer.h"
+#include "vertexArray.h"
 
 
 static std::string parseShader(const std::string& filePath){
@@ -116,14 +117,12 @@ int main(void)
         2, 3, 0  // second triangle
         };
 
-    unsigned int vao;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-
+    vertexArray va;
     vertexBuffer vb(positions, sizeof(positions));
 
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
+    vertexBufferLayout layout;
+    layout.Push<float>(2);
+    va.addBuffer(vb, layout);
 
     indexBuffer ib(indices, sizeof(indices));
 
@@ -133,7 +132,6 @@ int main(void)
 
     unsigned int shaderProgram = CreateShader(vertexSource, fragmentSource);
     glUseProgram(shaderProgram);
-
 
     // uniform setup
     int location = glGetUniformLocation(shaderProgram, "u_Color");
@@ -146,8 +144,8 @@ int main(void)
     float r = 0.0f;
     float increment = 0.025f;
 
+    va.Unbind();
     glUseProgram(0);
-    glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
@@ -159,7 +157,7 @@ int main(void)
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(shaderProgram);
-        glBindVertexArray(vao);
+        va.Bind();
         ib.Bind();
 
         glUniform4f(location, r, 0.0f, 0.0, 0.0f);

@@ -12,6 +12,7 @@
         "${workspaceFolder}/src/renderer.cpp",
         "${workspaceFolder}/src/vertexBuffer.cpp",
         "${workspaceFolder}/src/indexBuffer.cpp",
+        "${workspaceFolder}/src/vertexArray.cpp",
         "-I",
         "${workspaceFolder}/include",
         "-L",
