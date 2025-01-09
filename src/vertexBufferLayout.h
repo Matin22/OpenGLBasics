@@ -17,7 +17,7 @@ struct vertexBufferElement
             case GL_UNSIGNED_BYTE:  return 1;
         }
 
-        ASSERT(false); // Replace this with your error-handling mechanism
+        ASSERT(false); // error-handling mechanism
         return 0;
     }
 
