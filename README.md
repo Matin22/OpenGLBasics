@@ -1,4 +1,4 @@
-# OpenGLTut
+# OpenGLBasics
 
 This repository contains a series of simple OpenGL programs and experiments intended to demonstrate the fundamentals of modern OpenGL (version 3.3+). The goal is to provide clear, minimal examples for learning and experimenting with OpenGL concepts using C++.
 
